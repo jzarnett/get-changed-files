@@ -62,8 +62,9 @@ async function run(): Promise<void> {
     const response = await client.request('GET /repos/{owner}/{repo}/compare/{basehead}{?page,per_page}', {
       owner: context.repo.owner,
       repo: context.repo.repo,
-      basehead: base + head
+      basehead: base + '...' + head
     })
+  
 
     // Ensure that the request was successful.
     if (response.status !== 200) {

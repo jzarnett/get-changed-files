@@ -1,5 +1,5 @@
 import * as core from '@actions/core'
-import {context, GitHub} from '@actions/github'
+import {context, getOctokit } from '@actions/github'
 
 type Format = 'space-delimited' | 'csv' | 'json'
 type FileStatus = 'added' | 'modified' | 'removed' | 'renamed'
@@ -7,7 +7,7 @@ type FileStatus = 'added' | 'modified' | 'removed' | 'renamed'
 async function run(): Promise<void> {
   try {
     // Create GitHub client with the API token.
-    const client = new GitHub(core.getInput('token', {required: true}))
+    const client = getOctokit(core.getInput('token', {required: true}))
     const format = core.getInput('format', {required: true}) as Format
 
     // Ensure that the format parameter is set properly.
@@ -59,11 +59,10 @@ async function run(): Promise<void> {
 
     // Use GitHub's compare two commits API.
     // https://developer.github.com/v3/repos/commits/#compare-two-commits
-    const response = await client.repos.compareCommits({
-      base,
-      head,
+    const response = await client.request('GET /repos/{owner}/{repo}/compare/{basehead}{?page,per_page}', {
       owner: context.repo.owner,
-      repo: context.repo.repo
+      repo: context.repo.repo,
+      basehead: base + head
     })
 
     // Ensure that the request was successful.
@@ -182,7 +181,7 @@ async function run(): Promise<void> {
 
     // For backwards-compatibility
     core.setOutput('deleted', removedFormatted)
-  } catch (error) {
+  } catch (error: any) {
     core.setFailed(error.message)
   }
 }
